@@ -163,13 +163,18 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
     brunoParent.name = yaml.info.title;
   }
 
+  let serverUrl = '';
+  if (yaml.servers && yaml.servers.length > 0) {
+    serverUrl = yaml.servers[0].url;
+  }
+
   // Fonction pour obtenir la racine d'un chemin
   function getRoot(path) {
     const parts = path.split('/');
     return parts[1]; // Le root est le deuxième élément après la première barre oblique
   }
 
-  function createFolderStructure(parent, levels, pathObject) {
+  function createFolderStructure(parent, levels, pathObject, serverUrl) {
     if (levels.length === 0) {
       // Si nous avons atteint la fin des niveaux, ajoutez un brunoRequestItem pour chaque opération
       for (const operationName in pathObject) {
@@ -179,7 +184,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
           name: operation.summary || '',
           type: 'http-request',
           request: {
-            url: 'http://hostname',
+            url: serverUrl,
             method: operationName.toUpperCase(),
             headers: [],
             params: [],
@@ -211,7 +216,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
       }
 
       // Appelez la fonction récursivement pour les niveaux restants
-      createFolderStructure(folderItem, levels.slice(1), pathObject);
+      createFolderStructure(folderItem, levels.slice(1), pathObject, serverUrl);
     }
   }
 
@@ -240,7 +245,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
 
     // Créez la structure du dossier pour les niveaux
     const levels = path.split('/').slice(2); // Exclure le root
-    createFolderStructure(rootFolder, levels, pathObject);
+    createFolderStructure(rootFolder, levels, pathObject, serverUrl);
   }
 
   console.log('collections = ' + JSON.stringify(brunoParent, null, 2));
