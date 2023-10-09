@@ -1,5 +1,6 @@
 import jsyaml from 'js-yaml';
-
+const jsf = require('json-schema-faker');
+const xmlbuilder = require('xmlbuilder');
 import each from 'lodash/each';
 import get from 'lodash/get';
 import fileDialog from 'file-dialog';
@@ -174,11 +175,53 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
     return parts[1]; // Le root est le deuxième élément après la première barre oblique
   }
 
-  function createFolderStructure(parent, levels, pathObject, serverUrl) {
+  // Fonction pour générer des données aléatoires pour un schéma
+  function generateRandomData(schema) {
+    let randomData = {};
+
+    if (schema.properties) {
+      for (const key in schema.properties) {
+        const property = schema.properties[key];
+
+        if (property.$ref) {
+          // Si la propriété est une référence, utilisez le schéma réel de objectItemsWithPrefix
+          const referenceKey = property.$ref;
+          if (objectItemsWithPrefix[referenceKey]) {
+            randomData[key] = generateRandomData(objectItemsWithPrefix[referenceKey]);
+          }
+        } else if (property.type === 'array' && property.items && property.items.$ref) {
+          // Si la propriété est de type "array" avec une référence à "items.$ref"
+          const referenceKey = property.items.$ref;
+          if (objectItemsWithPrefix[referenceKey]) {
+            // Récursivement appeler generateRandomData avec le schéma de l'élément
+            randomData[key] = [generateRandomData(objectItemsWithPrefix[referenceKey])];
+          }
+        } else {
+          // Générer des données aléatoires en fonction du type de propriété
+          randomData[key] = jsf.generate(property);
+        }
+      }
+    } else if (schema.$ref) {
+      const referenceKey = schema.$ref;
+      if (objectItemsWithPrefix[referenceKey]) {
+        randomData = generateRandomData(objectItemsWithPrefix[referenceKey]);
+      }
+    }
+
+    return randomData; //JSON.stringify(randomData, null, 2).replace(/\n/g, '');
+  }
+
+  function getSchemaName(schemaRef) {
+    const parts = schemaRef['$ref'].split('/');
+    return parts[parts.length - 1];
+  }
+
+  function createFolderStructure(parent, levels, pathObject, serverUrl, objectItemsWithPrefix) {
     if (levels.length === 0) {
       // Si nous avons atteint la fin des niveaux, ajoutez un brunoRequestItem pour chaque opération
       for (const operationName in pathObject) {
         const operation = pathObject[operationName];
+
         const brunoRequestItem = {
           uid: uuid(),
           name: operation.summary || '',
@@ -190,7 +233,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
             params: [],
             body: {
               mode: 'none',
-              json: '{}',
+              json: null,
               text: null,
               xml: null,
               formUrlEncoded: [],
@@ -199,6 +242,42 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
           }
         };
         parent.items.push(brunoRequestItem);
+
+        // generate random data
+        if (operation.requestBody && operation.requestBody.content) {
+          const content = operation.requestBody.content;
+
+          for (const contentType in content) {
+            const contentObject = content[contentType];
+
+            let randomData = generateRandomData(contentObject.schema);
+
+            if (contentType === 'application/xml') {
+              const schemaName = getSchemaName(contentObject.schema);
+
+              const xmlObject = {
+                [schemaName]: randomData
+              };
+
+              const xmlData = xmlbuilder.create(xmlObject).end({ pretty: true });
+              brunoRequestItem.request.body.xml = xmlData;
+            } else if (contentType === 'application/json') {
+              brunoRequestItem.request.body.json = '"' + randomData + '"';
+              brunoRequestItem.request.body.json = randomData;
+              brunoRequestItem.request.body.json = JSON.stringify(randomData);
+            }
+          }
+
+          // set the mode on the first content type in the list
+          const firstContentType = Object.keys(content)[0];
+          if (firstContentType === 'application/xml') {
+            brunoRequestItem.request.body.mode = 'xml';
+            brunoRequestItem.request.body.text = brunoRequestItem.request.xml;
+          } else if (firstContentType === 'application/json') {
+            brunoRequestItem.request.body.mode = 'json';
+            brunoRequestItem.request.body.text = brunoRequestItem.request.json;
+          }
+        }
       }
     } else {
       // Sinon, créez un brunoFolderItem pour le niveau actuel
@@ -216,9 +295,28 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
       }
 
       // Appelez la fonction récursivement pour les niveaux restants
-      createFolderStructure(folderItem, levels.slice(1), pathObject, serverUrl);
+      createFolderStructure(folderItem, levels.slice(1), pathObject, serverUrl, objectItemsWithPrefix);
     }
   }
+
+  // Fonction pour extraire les éléments de type "object" avec le préfixe
+  function extractObjectsWithPrefix(obj, currentPath = '') {
+    const objects = {};
+    for (const key in obj) {
+      const path = currentPath ? `${currentPath}.${key}` : `#/components/schemas/${key}`;
+      if (obj[key] && typeof obj[key] === 'object') {
+        if (obj[key].type === 'object') {
+          objects[path] = obj[key];
+        }
+        const nestedObjects = extractObjectsWithPrefix(obj[key], path);
+        Object.assign(objects, nestedObjects);
+      }
+    }
+    return objects;
+  }
+
+  // Appeler la fonction pour extraire les objets
+  const objectItemsWithPrefix = extractObjectsWithPrefix(yaml.components.schemas);
 
   const paths = yaml.paths;
 
@@ -245,7 +343,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
 
     // Créez la structure du dossier pour les niveaux
     const levels = path.split('/').slice(2); // Exclure le root
-    createFolderStructure(rootFolder, levels, pathObject, serverUrl);
+    createFolderStructure(rootFolder, levels, pathObject, serverUrl, objectItemsWithPrefix);
   }
 
   console.log('collections = ' + JSON.stringify(brunoParent, null, 2));
