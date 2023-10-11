@@ -14,7 +14,7 @@ const readFile = (files) => {
 
     fileReader.onload = (e) => {
       try {
-        // Analyser le contenu YAML une fois qu'il a été lu
+        // Parse the YAML content once it has been read
         const yamlData = e.target.result;
         const parsedYaml = jsyaml.load(yamlData);
         resolve(parsedYaml);
@@ -25,13 +25,13 @@ const readFile = (files) => {
 
     fileReader.onerror = (err) => reject(err);
 
-    // Lire le fichier sélectionné en tant que texte
+    // Read the selected file as text
     fileReader.readAsText(files[0]);
   });
 };
 
 const addSuffixToDuplicateName = (item, index, allItems) => {
-  // Check if the request name already exist and if so add a number suffix
+  // Check if the request name already exists and if so, add a number suffix
   const nameSuffix = allItems.reduce((nameSuffix, otherItem, otherIndex) => {
     if (otherItem.name === item.name && otherIndex < index) {
       nameSuffix++;
@@ -159,7 +159,7 @@ const transformOpenApiRequestItem = (request, index, allRequests) => {
 const importOpenApiV3Collection = (brunoParent, yaml) => {
   brunoParent.items = brunoParent.items || [];
 
-  // set the name on the parent
+  // Set the name on the parent
   if (yaml.info && yaml.info.title) {
     brunoParent.name = yaml.info.title;
   }
@@ -169,13 +169,13 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
     serverUrl = yaml.servers[0].url;
   }
 
-  // Fonction pour obtenir la racine d'un chemin
+  // Function to get the root of a path
   function getRoot(path) {
     const parts = path.split('/');
-    return parts[1]; // Le root est le deuxième élément après la première barre oblique
+    return parts[1]; // The root is the second element after the first slash
   }
 
-  // Fonction pour générer des données aléatoires pour un schéma
+  // Function to generate random data for a schema
   function generateRandomData(schema) {
     let randomData = {};
 
@@ -184,20 +184,20 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
         const property = schema.properties[key];
 
         if (property.$ref) {
-          // Si la propriété est une référence, utilisez le schéma réel de objectItemsWithPrefix
+          // If the property is a reference, use the actual schema from objectItemsWithPrefix
           const referenceKey = property.$ref;
           if (objectItemsWithPrefix[referenceKey]) {
             randomData[key] = generateRandomData(objectItemsWithPrefix[referenceKey]);
           }
         } else if (property.type === 'array' && property.items && property.items.$ref) {
-          // Si la propriété est de type "array" avec une référence à "items.$ref"
+          // If the property is of type "array" with a reference to "items.$ref"
           const referenceKey = property.items.$ref;
           if (objectItemsWithPrefix[referenceKey]) {
-            // Récursivement appeler generateRandomData avec le schéma de l'élément
+            // Recursively call generateRandomData with the schema of the item
             randomData[key] = [generateRandomData(objectItemsWithPrefix[referenceKey])];
           }
         } else {
-          // Générer des données aléatoires en fonction du type de propriété
+          // Generate random data based on the property type
           randomData[key] = jsf.generate(property);
         }
       }
@@ -218,7 +218,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
 
   function createFolderStructure(parent, levels, pathObject, serverUrl, objectItemsWithPrefix) {
     if (levels.length === 0) {
-      // Si nous avons atteint la fin des niveaux, ajoutez un brunoRequestItem pour chaque opération
+      // If we have reached the end of levels, add a brunoRequestItem for each operation
       for (const operationName in pathObject) {
         const operation = pathObject[operationName];
 
@@ -243,7 +243,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
         };
         parent.items.push(brunoRequestItem);
 
-        // generate random data
+        // Generate random data
         if (operation.requestBody && operation.requestBody.content) {
           const content = operation.requestBody.content;
 
@@ -268,7 +268,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
             }
           }
 
-          // set the mode on the first content type in the list
+          // Set the mode on the first content type in the list
           const firstContentType = Object.keys(content)[0];
           if (firstContentType === 'application/xml') {
             brunoRequestItem.request.body.mode = 'xml';
@@ -280,7 +280,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
         }
       }
     } else {
-      // Sinon, créez un brunoFolderItem pour le niveau actuel
+      // Otherwise, create a brunoFolderItem for the current level
       const currentLevel = levels[0];
       let folderItem = parent.items.find((item) => item.name === currentLevel);
 
@@ -294,12 +294,12 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
         parent.items.push(folderItem);
       }
 
-      // Appelez la fonction récursivement pour les niveaux restants
+      // Call the function recursively for the remaining levels
       createFolderStructure(folderItem, levels.slice(1), pathObject, serverUrl, objectItemsWithPrefix);
     }
   }
 
-  // Fonction pour extraire les éléments de type "object" avec le préfixe
+  // Function to extract "object" type items with a prefix
   function extractObjectsWithPrefix(obj, currentPath = '') {
     const objects = {};
     for (const key in obj) {
@@ -315,20 +315,20 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
     return objects;
   }
 
-  // Appeler la fonction pour extraire les objets
+  // Call the function to extract objects
   const objectItemsWithPrefix = extractObjectsWithPrefix(yaml.components.schemas);
 
   const paths = yaml.paths;
 
-  // Parcourez et affichez toutes les "paths"
+  // Iterate through and process all "paths"
   for (const path in paths) {
-    const pathObject = paths[path]; // C'est l'objet JSON complet associé au chemin
+    const pathObject = paths[path]; // This is the complete JSON object associated with the path
     console.log(`Path: ${path}`);
     console.log('Path Object:', pathObject);
 
     const root = getRoot(path);
 
-    // Trouver le brunoFolderItem racine correspondant ou le créer s'il n'existe pas
+    // Find the corresponding root brunoFolderItem or create it if it doesn't exist
     let rootFolder = brunoParent.items.find((item) => item.name === root);
 
     if (!rootFolder) {
@@ -341,8 +341,8 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
       brunoParent.items.push(rootFolder);
     }
 
-    // Créez la structure du dossier pour les niveaux
-    const levels = path.split('/').slice(2); // Exclure le root
+    // Create the folder structure for the levels
+    const levels = path.split('/').slice(2); // Exclude the root
     createFolderStructure(rootFolder, levels, pathObject, serverUrl, objectItemsWithPrefix);
   }
 
@@ -354,7 +354,7 @@ const importOpenApiV3Collection = (brunoParent, yaml) => {
 const importOpenApiV2Collection = (brunoParent, data) => {
   const paths = data.paths;
 
-  //not yet implemented
+  // Not yet implemented
 
   return undefined;
 };
@@ -373,16 +373,16 @@ const parseOpenApiCollection = (data) => {
       let openapiVersion = data.openapi;
 
       if (openapiVersion.startsWith('3.')) {
-        // Logique pour OpenAPI 3.x.x
-        console.log('Version OpenAPI 3.x.x détectée.');
+        // Logic for OpenAPI 3.x.x
+        console.log('Detected OpenAPI 3.x.x version.');
         return resolve(importOpenApiV3Collection(brunoCollection, data));
       } else if (openapiVersion.startsWith('2.')) {
-        // Logique pour OpenAPI 2.x.x
-        console.log('Version OpenAPI 2.x.x détectée.');
+        // Logic for OpenAPI 2.x.x
+        console.log('Detected OpenAPI 2.x.x version.');
         return resolve(importOpenApiV2Collection(brunoCollection, data));
       } else {
-        // Gérer d'autres versions si nécessaire
-        console.log('Version OpenAPI non prise en charge.');
+        // Handle other versions if necessary
+        console.log('Unsupported OpenAPI version.');
       }
 
       throw new BrunoError('Unknown OpenApi schema version');
