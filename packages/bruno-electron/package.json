@@ -8,7 +8,7 @@
   "author": "Anoop M D <anoop.md1421@gmail.com> (https://helloanoop.com/)",
   "scripts": {
     "clean": "rimraf dist",
-    "dev": "electron .",
+    "dev": "electron . --remote-debugging-port=9222",
     "dist": "electron-builder --mac --config electron-builder-config.js",
     "dist-mac": "electron-builder --mac --config electron-builder-config.js",
     "dist-win": "electron-builder --win --config electron-builder-config.js",

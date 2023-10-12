@@ -43,6 +43,28 @@ const reducer = (state, action) => {
       });
     }
 
+    case 'ADD_LINES': {
+      if (Array.isArray(action.lines)) {
+        // Vérifiez si action.lines est un tableau
+        return produce(state, (draft) => {
+          action.lines.forEach((newLine) => {
+            draft.variables.push({
+              uid: uuid(),
+              name: newLine.name,
+              value: newLine.value,
+              type: 'text',
+              secret: false,
+              enabled: true
+            });
+          });
+          draft.hasChanges = true;
+        });
+      } else {
+        // Gérez ici le cas où action.lines n'est pas un tableau
+        return state; // Ou renvoyez le state inchangé
+      }
+    }
+
     default: {
       return state;
     }

@@ -3,6 +3,7 @@ import find from 'lodash/find';
 import classnames from 'classnames';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateRequestPaneTab } from 'providers/ReduxStore/slices/tabs';
+import { updateCodeEditorContent } from 'providers/ReduxStore/slices/collections';
 import QueryParams from 'components/RequestPane/QueryParams';
 import RequestHeaders from 'components/RequestPane/RequestHeaders';
 import RequestBody from 'components/RequestPane/RequestBody';
@@ -14,6 +15,8 @@ import Assertions from 'components/RequestPane/Assertions';
 import Script from 'components/RequestPane/Script';
 import Tests from 'components/RequestPane/Tests';
 import StyledWrapper from './StyledWrapper';
+import prettier from 'prettier';
+import get from 'lodash/get';
 
 const HttpRequestPane = ({ item, collection, leftPaneWidth }) => {
   const dispatch = useDispatch();
@@ -76,6 +79,27 @@ const HttpRequestPane = ({ item, collection, leftPaneWidth }) => {
     });
   };
 
+  const handlePrettyPrintChange = (event) => {
+    if (event.target.checked) {
+      // Appel de la fonction de formatage ici
+      formatCodeInCodeEditor();
+    }
+    // Autres actions si la case à cocher est désélectionnée
+  };
+
+  const formatCodeInCodeEditor = () => {
+    // Utilisez la bibliothèque de formatage de code de votre choix ici
+    // Par exemple, si vous utilisez Prettier :
+
+    const body = get(item, 'request.body');
+    const bodyMode = get(item, 'request.body.mode');
+
+    //
+    const formattedCode = JSON.stringify(body, null, 2);
+    // Ensuite, utilisez dispatch pour mettre à jour le contenu du CodeEditor
+    dispatch(updateCodeEditorContent(formattedCode));
+  };
+
   return (
     <StyledWrapper className="flex flex-col h-full relative">
       <div className="flex flex-wrap items-center tabs" role="tablist">
@@ -102,6 +126,11 @@ const HttpRequestPane = ({ item, collection, leftPaneWidth }) => {
         </div>
         <div className={getTabClassname('tests')} role="tab" onClick={() => selectTab('tests')}>
           Tests
+        </div>
+        {/* Nouvelle ligne pour Pretty Print */}
+        <div className="flex items-center">
+          <label htmlFor="prettyPrintCheckbox">Pretty print</label>
+          <input type="checkbox" id="prettyPrintCheckbox" onChange={handlePrettyPrintChange} />
         </div>
         {focusedTab.requestPaneTab === 'body' ? (
           <div className="flex flex-grow justify-end items-center">

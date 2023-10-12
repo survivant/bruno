@@ -36,6 +36,10 @@ export const collectionsSlice = createSlice({
   name: 'collections',
   initialState,
   reducers: {
+    updateCodeEditorContent: (state, action) => {
+      console.log('');
+      //state.codeEditorContent = action.payload;
+    },
     createCollection: (state, action) => {
       const collectionUids = map(state.collections, (c) => c.uid);
       const collection = action.payload;
@@ -1205,6 +1209,7 @@ export const collectionsSlice = createSlice({
 });
 
 export const {
+  updateCodeEditorContent,
   createCollection,
   brunoConfigUpdateEvent,
   renameCollection,
