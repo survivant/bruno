@@ -13,7 +13,22 @@ import StyledWrapper from './StyledWrapper';
 const EnvironmentVariables = ({ environment, collection, tofuIsReady }) => {
   const dispatch = useDispatch();
   const { storedTheme } = useTheme();
-  const [state, reducerDispatch] = useReducer(reducer, { hasChanges: false, variables: environment.variables || [] });
+
+  let initialVariables = environment.variables;
+
+  try {
+    initialVariables = JSON.stringify(environment.variables.map(({ name, value }) => ({ name, value }), null, 2));
+  } catch (error) {
+    console.log('invalid json=' + environment.variables);
+  }
+
+  const [initialState, setInitialState] = useState({
+    hasChanges: false,
+    variables: initialVariables
+  });
+
+  const [state, reducerDispatch] = useReducer(reducer, initialState); // Utilisez l'état initial
+  //const [state, reducerDispatch] = useReducer(reducer, { hasChanges: false, variables: environment.variables || [] });
   const { variables, hasChanges } = state;
   const [isSaveButtonClicked, setIsSaveButtonClicked] = useState(false);
 
@@ -85,7 +100,9 @@ const EnvironmentVariables = ({ environment, collection, tofuIsReady }) => {
       {tofuIsReady ? ( // Utilisez l'état tofuIsReady pour déterminer le rendu
         <textarea
           style={{ width: '600px', height: '200px' }} // Définissez la largeur et la hauteur souhaitées ici
-          value={JSON.stringify(variables.map(({ name, value }) => ({ name, value }), null, 2))}
+          //value={JSON.stringify(variables.map(({ name, value }) => ({ name, value }), null, 2))}
+          //value={JSON.stringify(variables)}
+          value={variables}
           onChange={handleJsonChange}
         />
       ) : (
@@ -100,7 +117,7 @@ const EnvironmentVariables = ({ environment, collection, tofuIsReady }) => {
             </tr>
           </thead>
           <tbody>
-            {variables && variables.length
+            {console.log('variable=' + variables) && variables && variables.length
               ? variables.map((variable, index) => {
                   return (
                     <tr key={variable.uid}>
