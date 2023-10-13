@@ -65,6 +65,18 @@ const reducer = (state, action) => {
       }
     }
 
+    case 'UPDATE_VARIABLES': {
+      return produce(state, (draft) => {
+        try {
+          draft.variables = action.variables; // Mettez à jour les variables avec le texte brut
+          draft.hasChanges = true;
+        } catch (error) {
+          // Gérez les erreurs de syntaxe JSON ici si nécessaire.
+          console.log(error);
+        }
+      });
+    }
+
     default: {
       return state;
     }

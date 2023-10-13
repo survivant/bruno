@@ -68,20 +68,15 @@ const EnvironmentVariables = ({ environment, collection, tofuIsReady }) => {
   };
 
   const handleJsonChange = (e) => {
-    if (tofuIsReady && isSaveButtonClicked) {
-      try {
-        const newVariables = JSON.parse(e.target.value);
-        reducerDispatch({
-          type: 'UPDATE_VARIABLES',
-          variables: newVariables
-        });
-      } catch (error) {
-        // Gérez les erreurs de syntaxe JSON ici si nécessaire.
-        console.log(error);
-      }
-    } else {
-      console.log(e.target.value);
-      e.stopPropagation(); // Arrêtez la propagation de l'événement.
+    try {
+      //const newVariables = JSON.parse(e.target.value);
+      reducerDispatch({
+        type: 'UPDATE_VARIABLES',
+        variables: e.target.value
+      });
+    } catch (error) {
+      // Gérez les erreurs de syntaxe JSON ici si nécessaire.
+      console.log(error);
     }
   };
 
@@ -91,8 +86,7 @@ const EnvironmentVariables = ({ environment, collection, tofuIsReady }) => {
         <textarea
           style={{ width: '600px', height: '200px' }} // Définissez la largeur et la hauteur souhaitées ici
           value={JSON.stringify(variables.map(({ name, value }) => ({ name, value }), null, 2))}
-          onChange={console.log('')}
-          //onChange={handleJsonChange}
+          onChange={handleJsonChange}
         />
       ) : (
         <table>
