@@ -74,8 +74,12 @@ const languages = [
 ];
 
 const GenerateCodeItem = ({ collection, item, onClose }) => {
-  const url = get(item, 'draft.request.url') !== undefined ? get(item, 'draft.request.url') : get(item, 'request.url');
+  let url = get(item, 'draft.request.url') !== undefined ? get(item, 'draft.request.url') : get(item, 'request.url');
+  const auth =
+    get(item, 'draft.request.auth') !== undefined ? get(item, 'draft.request.auth') : get(item, 'request.auth');
   const environment = findEnvironmentInCollection(collection, collection.activeEnvironmentUid);
+  const collectionVariables = collection.collectionVariables;
+
   let envVars = {};
   if (environment) {
     const vars = get(environment, 'variables', []);
@@ -85,11 +89,24 @@ const GenerateCodeItem = ({ collection, item, onClose }) => {
     }, {});
   }
 
+  let matches = url.match(/{{(.*?)}}/);
+
+  if (matches) {
+    let variableName = matches[1];
+
+    // Vérifier si la variable existe dans collectionVariables
+    if (collectionVariables.hasOwnProperty(variableName)) {
+      // Remplacer la valeur de la variable dans l'URL
+      url = url.replace(matches[0], encodeURIComponent(collectionVariables[variableName]));
+    }
+  }
+
   const interpolatedUrl = interpolateUrl({
     url,
     envVars,
     collectionVariables: collection.collectionVariables,
-    processEnvVars: collection.processEnvVariables
+    processEnvVars: collection.processEnvVariables,
+    auth
   });
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
   return (
@@ -118,6 +135,7 @@ const GenerateCodeItem = ({ collection, item, onClose }) => {
               <CodeView
                 language={selectedLanguage}
                 item={{
+                  collection,
                   ...item,
                   request:
                     item.request.url !== ''
