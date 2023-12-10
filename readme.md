@@ -13,6 +13,6 @@ Sébastien
 
 Here are the Issues that are included
 
-- [Bruno Issue #1189 - [chore] Refactoring to move all interpolate methods into bruno-js](https://github.com/usebruno/bruno/issues/1189)
-- [Bruno Issue #1165 - [BUG] Variable evaluation before submit request](https://github.com/usebruno/bruno/issues/1165)
-- [Bruno Issue #1112 - [BUG] Generate code doesn't support variables](https://github.com/usebruno/bruno/issues/1112)
+- [Bruno Pull Request #1191 - [chore] Refactoring to move all interpolate methods into bruno-js](https://github.com/usebruno/bruno/pull/1191)
+- [Bruno Pull Request #1173 - [BUG] Replace recursive variables](https://github.com/usebruno/bruno/pull/1173)
+- [Bruno Pull Request #1118 - [BUG] Generate code doesn't support variables](https://github.com/usebruno/bruno/pull/1118)
