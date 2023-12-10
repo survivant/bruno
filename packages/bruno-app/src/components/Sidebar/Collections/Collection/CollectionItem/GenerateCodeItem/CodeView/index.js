@@ -7,6 +7,10 @@ import { useSelector } from 'react-redux';
 import { uuid } from 'utils/common';
 import cloneDeep from 'lodash/cloneDeep';
 import { interpolateString, interpolateVars } from '@usebruno/js/src/interpolate';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+import toast from 'react-hot-toast';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCopy } from '@fortawesome/free-solid-svg-icons';
 
 const CodeView = ({ language, item, envVars, collectionVariables }) => {
   const { storedTheme } = useTheme();
@@ -56,13 +60,20 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
   }
 
   return (
-    <CodeEditor
-      readOnly
-      value={snippet}
-      font={get(preferences, 'font.codeFont', 'default')}
-      theme={storedTheme}
-      mode={lang}
-    />
+    <>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <CopyToClipboard text={snippet} onCopy={() => toast.success('Copied to clipboard!')}>
+          <FontAwesomeIcon icon={faCopy} style={{ cursor: 'pointer' }} />
+        </CopyToClipboard>
+      </div>
+      <CodeEditor
+        readOnly
+        value={snippet}
+        font={get(preferences, 'font.codeFont', 'default')}
+        theme={storedTheme}
+        mode={lang}
+      />
+    </>
   );
 };
 

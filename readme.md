@@ -13,6 +13,7 @@ Sébastien
 
 Here are the Issues that are included
 
+- [Bruno Pull Request #1198 - [feature] Add copy to clipboard button in Generate Code](https://github.com/usebruno/bruno/pull/1198)
 - [Bruno Pull Request #1194 - [BUG] Add validation for Auth mode basic](https://github.com/usebruno/bruno/pull/1194)
 - [Bruno Pull Request #1191 - [chore] Refactoring to move all interpolate methods into bruno-js](https://github.com/usebruno/bruno/pull/1191)
 - [Bruno Pull Request #1173 - [BUG] Replace recursive variables](https://github.com/usebruno/bruno/pull/1173)
