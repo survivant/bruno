@@ -5,6 +5,7 @@ import StyledWrapper from './StyledWrapper';
 import { isValidUrl } from 'utils/url/index';
 import get from 'lodash/get';
 import { findEnvironmentInCollection } from 'utils/collections';
+import { cloneDeep } from 'lodash';
 const { interpolateVars, interpolateUrl, interpolateString } = require('@usebruno/js/src/interpolate');
 
 const languages = [
@@ -56,11 +57,10 @@ const languages = [
 ];
 
 const GenerateCodeItem = ({ collection, item, onClose }) => {
-  let url = get(item, 'draft.request.url') !== undefined ? get(item, 'draft.request.url') : get(item, 'request.url');
-  const auth =
-    get(item, 'draft.request.auth') !== undefined ? get(item, 'draft.request.auth') : get(item, 'request.auth');
+  let request = get(item, 'draft.request') !== undefined ? get(item, 'draft.request') : get(item, 'request');
+  request = cloneDeep(request);
   const environment = findEnvironmentInCollection(collection, collection.activeEnvironmentUid);
-  const collectionVariables = collection.collectionVariables;
+  const collectionVariables = cloneDeep(collection.collectionVariables);
 
   let envVars = {};
   if (environment) {
@@ -71,25 +71,10 @@ const GenerateCodeItem = ({ collection, item, onClose }) => {
     }, {});
   }
 
-  let matches = url.match(/{{(.*?)}}/);
+  const interpolatedRequest = interpolateVars(request, envVars, collectionVariables, collection.processEnvVariables);
 
-  if (matches) {
-    let variableName = matches[1];
+  let interpolatedUrl = interpolatedRequest.url;
 
-    // Vérifier si la variable existe dans collectionVariables
-    if (collectionVariables.hasOwnProperty(variableName)) {
-      // Remplacer la valeur de la variable dans l'URL
-      url = url.replace(matches[0], encodeURIComponent(collectionVariables[variableName]));
-    }
-  }
-
-  const interpolatedUrl = interpolateUrl({
-    url,
-    envVars,
-    collectionVariables: collection.collectionVariables,
-    processEnvVars: collection.processEnvVariables,
-    auth
-  });
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
   return (
     <Modal size="lg" title="Generate Code" handleCancel={onClose} hideFooter={true}>
@@ -116,19 +101,15 @@ const GenerateCodeItem = ({ collection, item, onClose }) => {
             {isValidUrl(interpolatedUrl) ? (
               <CodeView
                 language={selectedLanguage}
+                envVars={envVars}
+                collectionVariables={collectionVariables}
                 item={{
                   collection,
                   ...item,
-                  request:
-                    item.request.url !== ''
-                      ? {
-                          ...item.request,
-                          url: interpolatedUrl
-                        }
-                      : {
-                          ...item.draft.request,
-                          url: interpolatedUrl
-                        }
+                  request: {
+                    ...request,
+                    url: interpolatedUrl
+                  }
                 }}
               />
             ) : (

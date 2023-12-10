@@ -6,20 +6,23 @@ import { buildHarRequest } from 'utils/codegenerator/har';
 import { useSelector } from 'react-redux';
 import { uuid } from 'utils/common';
 import cloneDeep from 'lodash/cloneDeep';
+import { interpolateString, interpolateVars } from '@usebruno/js/src/interpolate';
 
-const CodeView = ({ language, item }) => {
+const CodeView = ({ language, item, envVars, collectionVariables }) => {
   const { storedTheme } = useTheme();
   const preferences = useSelector((state) => state.app.preferences);
   const { target, client, language: lang } = language;
-  const headers = item.draft ? get(item, 'draft.request.headers') : get(item, 'request.headers');
+  let headers = item.draft ? get(item, 'draft.request.headers') : get(item, 'request.headers');
 
-  let newHeaders = cloneDeep(headers);
+  envVars = cloneDeep(envVars);
+  collectionVariables = cloneDeep(collectionVariables);
+  headers = cloneDeep(headers);
 
   const auth =
     get(item, 'draft.request.auth') !== undefined ? get(item, 'draft.request.auth') : get(item, 'request.auth');
 
   if (auth.mode === 'bearer') {
-    newHeaders.push({
+    headers.push({
       name: 'Authorization',
       value: 'Bearer ' + auth.bearer.token,
       enabled: true,
@@ -27,28 +30,26 @@ const CodeView = ({ language, item }) => {
     });
   }
 
-  let collectionVariables = item.collection.collectionVariables;
-
-  for (let i = 0; i < newHeaders.length; i++) {
-    let headerValue = newHeaders[i].value;
+  for (let i = 0; i < headers.length; i++) {
+    let headerValue = headers[i].value;
 
     // Look for variables {{  }}
     let matches = headerValue.match(/{{(.*?)}}/);
 
     if (matches) {
-      let variableName = matches[1];
-
-      // look if variable exists
-      if (collectionVariables.hasOwnProperty(variableName)) {
-        newHeaders[i].value = headerValue.replace(matches[0], collectionVariables[variableName]);
-      }
+      headers[i].value = interpolateString(
+        headerValue,
+        envVars,
+        collectionVariables,
+        item.collection.processEnvVariables
+      );
     }
   }
 
   let snippet = '';
 
   try {
-    snippet = new HTTPSnippet(buildHarRequest({ request: item.request, newHeaders })).convert(target, client);
+    snippet = new HTTPSnippet(buildHarRequest({ request: item.request, headers })).convert(target, client);
   } catch (e) {
     console.error(e);
     snippet = 'Error generating code snippet';

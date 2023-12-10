@@ -53,16 +53,10 @@ const interpolateCollectionVars = (str, processEnvVars, processCollectionVariabl
   return output;
 };
 
-const interpolateString = (str, { envVariables, collectionVariables, processEnvVars }) => {
+const interpolateString = (str, envVariables = {}, collectionVariables = {}, processEnvVars = {}) => {
   if (!str || !str.length || typeof str !== 'string') {
     return str;
   }
-
-  processEnvVars = processEnvVars || {};
-  collectionVariables = collectionVariables || {};
-
-  // we clone envVariables because we don't want to modify the original object
-  envVariables = envVariables ? cloneDeep(envVariables) : {};
 
   // envVariables can, in turn, have values as {{process.env.VAR_NAME}}
   // Therefore, we need to interpolate envVariables first with processEnvVars
@@ -85,6 +79,7 @@ const interpolateString = (str, { envVariables, collectionVariables, processEnvV
 
   return template(combinedVars);
 };
+
 const interpolateUrl = ({ url, envVars, collectionVariables, processEnvVars }) => {
   if (!url || !url.length || typeof url !== 'string') {
     return;
@@ -108,8 +103,8 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
   envVars = cloneDeep(envVars);
   collectionVariables = cloneDeep(collectionVariables);
 
-  // envVars can inturn have values as {{process.env.VAR_NAME}}
-  // so we need to interpolate envVars first with processEnvVars
+  // envVariables can, in turn, have values as {{process.env.VAR_NAME}}
+  // Therefore, we need to interpolate envVariables first with processEnvVars
   forOwn(envVars, (value, key) => {
     envVars[key] = interpolateEnvVars(value, processEnvVars);
   });
@@ -118,6 +113,23 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
     collectionVariables[key] = interpolateCollectionVars(value, envVars, collectionVariables);
   });
 
+  const encodeURI = (str) => {
+    // Create a URL object from the string
+    let url = new URL(str);
+
+    // Get the search params object for easy parsing
+    let searchParams = url.searchParams;
+
+    // Encode each parameter
+    for (let [key, value] of searchParams) {
+      searchParams.set(key, encodeURIComponent(value));
+    }
+
+    // Replace the search string in the original url with the properly encoded one
+    url.search = searchParams.toString();
+
+    return url.href;
+  };
   const interpolate = (str) => {
     if (!str || !str.length || typeof str !== 'string') {
       return str;
@@ -148,11 +160,16 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
     return output;
   };
 
-  request.url = interpolate(request.url);
+  request.url = encodeURI(interpolate(request.url));
 
   forOwn(request.headers, (value, key) => {
     delete request.headers[key];
     request.headers[interpolate(key)] = interpolate(value);
+  });
+
+  each(request.params, (param) => {
+    param.name = interpolate(param.name);
+    param.value = interpolate(param.value);
   });
 
   const contentType = getContentType(request.headers);
@@ -183,10 +200,6 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
     request.data = interpolate(request.data);
   }
 
-  each(request.params, (param) => {
-    param.value = interpolate(param.value);
-  });
-
   if (request.proxy) {
     request.proxy.protocol = interpolate(request.proxy.protocol);
     request.proxy.hostname = interpolate(request.proxy.hostname);
@@ -201,7 +214,7 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
   // todo: we have things happening in two places w.r.t basic auth
   //       need to refactor this in the future
   // the request.auth (basic auth) object gets set inside the prepare-request.js file
-  if (request.auth) {
+  if (request.auth && request.auth.mode === undefined) {
     const username = interpolate(request.auth.username) || '';
     const password = interpolate(request.auth.password) || '';
 
