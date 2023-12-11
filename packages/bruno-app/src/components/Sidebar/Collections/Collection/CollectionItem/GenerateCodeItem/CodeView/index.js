@@ -9,8 +9,8 @@ import cloneDeep from 'lodash/cloneDeep';
 import { interpolateString, interpolateVars } from '@usebruno/js/src/interpolate';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCopy } from '@fortawesome/free-solid-svg-icons';
+import { IconCopy } from '@tabler/icons';
+import React from 'react';
 
 const CodeView = ({ language, item, envVars, collectionVariables }) => {
   const { storedTheme } = useTheme();
@@ -63,7 +63,7 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <CopyToClipboard text={snippet} onCopy={() => toast.success('Copied to clipboard!')}>
-          <FontAwesomeIcon icon={faCopy} style={{ cursor: 'pointer' }} />
+          <IconCopy size={25} strokeWidth={1.5} />
         </CopyToClipboard>
       </div>
       <CodeEditor
