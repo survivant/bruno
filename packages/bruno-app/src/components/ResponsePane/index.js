@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import find from 'lodash/find';
 import classnames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +15,7 @@ import TestResults from './TestResults';
 import TestResultsLabel from './TestResultsLabel';
 import StyledWrapper from './StyledWrapper';
 import ResponseSave from 'src/components/ResponsePane/ResponseSave';
+import GenerateTests from 'components/ResponsePane/GenerateTests';
 
 const ResponsePane = ({ rightPaneWidth, item, collection }) => {
   const dispatch = useDispatch();
@@ -118,6 +119,13 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
             <StatusCode status={response.status} />
             <ResponseTime duration={response.duration} />
             <ResponseSize size={response.size} />
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-wrap ">
+        {!isLoading && focusedTab.responsePaneTab == 'response' ? (
+          <div className="flex flex-grow ">
+            <GenerateTests item={item} />
           </div>
         ) : null}
       </div>
