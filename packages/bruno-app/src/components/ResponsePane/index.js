@@ -16,6 +16,7 @@ import TestResultsLabel from './TestResultsLabel';
 import StyledWrapper from './StyledWrapper';
 import ResponseSave from 'src/components/ResponsePane/ResponseSave';
 import GenerateTests from 'components/ResponsePane/GenerateTests';
+import CodeEditorCheckboxes from 'components/ResponsePane/CodeEditorCheckboxes';
 
 const ResponsePane = ({ rightPaneWidth, item, collection }) => {
   const dispatch = useDispatch();
@@ -125,6 +126,7 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
       <div className="flex flex-wrap ">
         {!isLoading && focusedTab.responsePaneTab == 'response' ? (
           <div className="flex flex-grow ">
+            <CodeEditorCheckboxes item={item} />
             <GenerateTests item={item} />
           </div>
         ) : null}
