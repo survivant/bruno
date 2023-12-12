@@ -13,6 +13,7 @@ Sébastien
 
 Here are the Issues that are included
 
+- [Bruno Pull Request #1128 - [feature] Generate tests from response](https://github.com/usebruno/bruno/pull/1128)
 - [Bruno Pull Request #1200 - [feature] Add copy to clipboard button in Generate Code](https://github.com/usebruno/bruno/pull/1200)
 - [Bruno Pull Request #1194 - [BUG] Add validation for Auth mode basic](https://github.com/usebruno/bruno/pull/1194)
 - [Bruno Pull Request #1191 - [chore] Refactoring to move all interpolate methods into bruno-js](https://github.com/usebruno/bruno/pull/1191)
