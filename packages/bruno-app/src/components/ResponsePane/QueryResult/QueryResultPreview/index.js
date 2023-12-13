@@ -76,6 +76,7 @@ const QueryResultPreview = ({
           value={formattedData}
           mode={mode}
           readOnly
+          checkboxEnabled={true}
         />
       );
     }

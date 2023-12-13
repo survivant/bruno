@@ -117,7 +117,7 @@ export default class CodeEditor extends React.Component {
       matchBrackets: true,
       showCursorWhenSelecting: true,
       foldGutter: true,
-      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
+      gutters: ['CodeMirror-checkboxes', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
       lint: { esversion: 11 },
       readOnly: this.props.readOnly,
       scrollbarStyle: 'overlay',
@@ -186,6 +186,14 @@ export default class CodeEditor extends React.Component {
         }
       }
     }));
+
+    // Update gutter with CodeMirror-checkboxes after the editor has been initialized
+    if (this.props.checkboxEnabled) {
+      this.createCheckboxes();
+    }
+
+    console.log(this.props.checkboxEnabled);
+
     CodeMirror.registerHelper('lint', 'json', function (text) {
       let found = [];
       if (!window.jsonlint) {
@@ -235,7 +243,44 @@ export default class CodeEditor extends React.Component {
     }
   }
 
+  createCheckboxes = () => {
+    const lastLine = this.editor.lineCount();
+
+    // Remove existing CodeMirror-checkboxes
+    this.editor.clearGutter('CodeMirror-checkboxes');
+
+    for (let i = 0; i <= lastLine; i++) {
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      //checkbox.style.float = 'left';
+      //checkbox.style.marginRight = '1em';
+
+      if (i === 0) {
+        // Add a control checkbox at line 0
+        checkbox.addEventListener('change', () => {
+          for (let j = 1; j <= lastLine; j++) {
+            const fileInfo = this.editor.lineInfo(j);
+            if (fileInfo && fileInfo.gutterMarkers && fileInfo.gutterMarkers['CodeMirror-checkboxes']) {
+              const lineCheckbox = fileInfo.gutterMarkers['CodeMirror-checkboxes'].firstChild;
+              if (lineCheckbox) lineCheckbox.checked = checkbox.checked;
+            }
+          }
+        });
+      }
+
+      this.editor.setGutterMarker(i, 'CodeMirror-checkboxes', checkbox);
+    }
+  };
+
   componentDidUpdate(prevProps) {
+    if (this.props.checkboxEnabled !== prevProps.checkboxEnabled) {
+      if (this.props.checkboxEnabled) {
+        this.createCheckboxes();
+      } else {
+        this.editor.clearGutter('control-CodeMirror-checkboxes');
+        this.editor.clearGutter('CodeMirror-checkboxes');
+      }
+    }
     // Ensure the changes caused by this update are not interpreted as
     // user-input changes which could otherwise result in an infinite
     // event loop.
