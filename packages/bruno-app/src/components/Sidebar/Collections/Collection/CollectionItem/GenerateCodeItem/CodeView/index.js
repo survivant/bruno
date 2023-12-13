@@ -2,6 +2,7 @@ import CodeEditor from 'components/CodeEditor/index';
 import get from 'lodash/get';
 import { HTTPSnippet } from 'httpsnippet';
 import { useTheme } from 'providers/Theme/index';
+import StyledWrapper from './StyledWrapper';
 import { buildHarRequest } from 'utils/codegenerator/har';
 import { useSelector } from 'react-redux';
 import { uuid } from 'utils/common';
@@ -60,20 +61,24 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
   }
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <CopyToClipboard text={snippet} onCopy={() => toast.success('Copied to clipboard!')}>
+    <div>
+      <StyledWrapper>
+        <CopyToClipboard
+          className="copy-to-clipboard"
+          text={snippet}
+          onCopy={() => toast.success('Copied to clipboard!')}
+        >
           <IconCopy size={25} strokeWidth={1.5} />
         </CopyToClipboard>
-      </div>
-      <CodeEditor
-        readOnly
-        value={snippet}
-        font={get(preferences, 'font.codeFont', 'default')}
-        theme={storedTheme}
-        mode={lang}
-      />
-    </>
+        <CodeEditor
+          readOnly
+          value={snippet}
+          font={get(preferences, 'font.codeFont', 'default')}
+          theme={storedTheme}
+          mode={lang}
+        />
+      </StyledWrapper>
+    </div>
   );
 };
 
