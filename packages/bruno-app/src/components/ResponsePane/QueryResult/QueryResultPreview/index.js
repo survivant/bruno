@@ -19,7 +19,8 @@ const QueryResultPreview = ({
   collection,
   mode,
   disableRunEventListener,
-  storedTheme
+  storedTheme,
+  onCheckboxChange
 }) => {
   const preferences = useSelector((state) => state.app.preferences);
   const dispatch = useDispatch();
@@ -77,6 +78,7 @@ const QueryResultPreview = ({
           mode={mode}
           readOnly
           checkboxEnabled={true}
+          onCheckboxChange={onCheckboxChange}
         />
       );
     }

@@ -46,7 +46,17 @@ const formatResponse = (data, mode, filter) => {
   return safeStringifyJSON(data);
 };
 
-const QueryResult = ({ item, collection, data, dataBuffer, width, disableRunEventListener, headers, error }) => {
+const QueryResult = ({
+  item,
+  collection,
+  data,
+  dataBuffer,
+  width,
+  disableRunEventListener,
+  headers,
+  error,
+  onCheckboxChange
+}) => {
   const contentType = getContentType(headers);
   const mode = getCodeMirrorModeBasedOnContentType(contentType, data);
   const [filter, setFilter] = useState(null);
@@ -133,6 +143,7 @@ const QueryResult = ({ item, collection, data, dataBuffer, width, disableRunEven
             allowedPreviewModes={allowedPreviewModes}
             disableRunEventListener={disableRunEventListener}
             storedTheme={storedTheme}
+            onCheckboxChange={onCheckboxChange}
           />
           {queryFilterEnabled && <QueryResultFilter onChange={debouncedResultFilterOnChange} mode={mode} />}
         </>

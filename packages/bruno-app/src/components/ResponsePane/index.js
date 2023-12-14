@@ -35,6 +35,11 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
 
   const response = item.response || {};
 
+  const handleCheckboxChange = (checkedLines) => {
+    // Faites quelque chose avec les lignes cochées, par exemple, les stocker dans un état
+    console.log('Lignes cochées :', checkedLines);
+  };
+
   const getTabPanel = (tab) => {
     switch (tab) {
       case 'response': {
@@ -48,6 +53,7 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
             headers={response.headers}
             error={response.error}
             key={item.filename}
+            onCheckboxChange={handleCheckboxChange}
           />
         );
       }
@@ -126,7 +132,7 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
       <div className="flex flex-wrap ">
         {!isLoading && focusedTab.responsePaneTab == 'response' ? (
           <div className="flex flex-grow ">
-            <CodeEditorCheckboxes item={item} />
+            <CodeEditorCheckboxes item={item} onCheckboxChange={handleCheckboxChange} />
             <GenerateTests item={item} />
           </div>
         ) : null}

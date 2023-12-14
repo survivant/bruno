@@ -194,6 +194,12 @@ export default class CodeEditor extends React.Component {
 
     console.log(this.props.checkboxEnabled);
 
+    // // Ajoutez cette logique pour obtenir les lignes sélectionnées
+    // if (checkboxEnabled) {
+    //   const selectedLines = getSelectedLines(editor);
+    //   handleCheckboxChange(selectedLines);
+    // }
+
     CodeMirror.registerHelper('lint', 'json', function (text) {
       let found = [];
       if (!window.jsonlint) {
@@ -244,6 +250,13 @@ export default class CodeEditor extends React.Component {
   }
 
   createCheckboxes = () => {
+    const handleCheckboxChange = (lineNumber, isChecked) => {
+      // Faites quelque chose avec le changement d'état, par exemple, stockez-le dans un état
+      console.log(`Checkbox at line ${lineNumber} is checked: ${isChecked}`);
+      // Vous pouvez également appeler la fonction onCheckboxChange ici si nécessaire
+      this.props.onCheckboxChange(lineNumber, isChecked);
+    };
+
     const lastLine = this.editor.lineCount();
 
     // Remove existing CodeMirror-checkboxes
@@ -252,21 +265,29 @@ export default class CodeEditor extends React.Component {
     for (let i = 0; i <= lastLine; i++) {
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      //checkbox.style.float = 'left';
-      //checkbox.style.marginRight = '1em';
 
-      if (i === 0) {
-        // Add a control checkbox at line 0
-        checkbox.addEventListener('change', () => {
+      // Ajoutez un attribut personnalisé pour suivre le numéro de ligne
+      checkbox.setAttribute('data-line-number', i);
+
+      checkbox.addEventListener('change', () => {
+        const isChecked = checkbox.checked;
+        const lineNumber = parseInt(checkbox.getAttribute('data-line-number'), 10);
+
+        // Si vous avez besoin de traiter le changement d'état de chaque case à cocher individuellement
+        handleCheckboxChange(lineNumber, isChecked);
+
+        // Si la case à cocher est la première (contrôle principal)
+        if (lineNumber === 0) {
+          // Appliquez la même valeur aux autres cases à cocher
           for (let j = 1; j <= lastLine; j++) {
             const fileInfo = this.editor.lineInfo(j);
             if (fileInfo && fileInfo.gutterMarkers && fileInfo.gutterMarkers['CodeMirror-checkboxes']) {
               const lineCheckbox = fileInfo.gutterMarkers['CodeMirror-checkboxes'].firstChild;
-              if (lineCheckbox) lineCheckbox.checked = checkbox.checked;
+              if (lineCheckbox) lineCheckbox.checked = isChecked;
             }
           }
-        });
-      }
+        }
+      });
 
       this.editor.setGutterMarker(i, 'CodeMirror-checkboxes', checkbox);
     }
