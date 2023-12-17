@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { IconCopy } from '@tabler/icons';
 import React from 'react';
 
-const CodeView = ({ language, item, envVars, collectionVariables }) => {
+const CodeView = ({ language, item }) => {
   const { storedTheme } = useTheme();
   const preferences = useSelector((state) => state.app.preferences);
   const { target, client, language: lang } = language;

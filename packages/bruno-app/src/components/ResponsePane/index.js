@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import find from 'lodash/find';
 import classnames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +15,7 @@ import TestResults from './TestResults';
 import TestResultsLabel from './TestResultsLabel';
 import StyledWrapper from './StyledWrapper';
 import ResponseSave from 'src/components/ResponsePane/ResponseSave';
+import ResponseClear from 'src/components/ResponsePane/ResponseClear';
 import GenerateTests from 'components/ResponsePane/GenerateTests';
 import CodeEditorCheckboxes from 'components/ResponsePane/CodeEditorCheckboxes';
 
@@ -116,6 +117,7 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
         </div>
         {!isLoading ? (
           <div className="flex flex-grow justify-end items-center">
+            <ResponseClear item={item} collection={collection} />
             <ResponseSave item={item} />
             <StatusCode status={response.status} />
             <ResponseTime duration={response.duration} />
