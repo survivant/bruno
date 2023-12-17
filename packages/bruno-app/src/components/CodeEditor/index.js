@@ -394,7 +394,10 @@ export default class CodeEditor extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.checkboxEnabled) {
       if (!this.state.checkboxUpdated) {
-        if (this.props.item.response.allCheckboxesChecked !== prevProps.item.response.allCheckboxesChecked) {
+        if (
+          this.props.item.response &&
+          this.props.item.response.allCheckboxesChecked !== prevProps.item.response.allCheckboxesChecked
+        ) {
           this.createCheckboxes();
         }
       } else {
