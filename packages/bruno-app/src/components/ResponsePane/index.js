@@ -17,12 +17,14 @@ import StyledWrapper from './StyledWrapper';
 import ResponseSave from 'src/components/ResponsePane/ResponseSave';
 import GenerateTests from 'components/ResponsePane/GenerateTests';
 import CodeEditorCheckboxes from 'components/ResponsePane/CodeEditorCheckboxes';
+import cloneDeep from 'lodash/cloneDeep';
 
 const ResponsePane = ({ rightPaneWidth, item, collection }) => {
   const dispatch = useDispatch();
   const tabs = useSelector((state) => state.tabs.tabs);
   const activeTabUid = useSelector((state) => state.tabs.activeTabUid);
   const isLoading = ['queued', 'sending'].includes(item.requestState);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const selectTab = (tab) => {
     dispatch(
@@ -33,11 +35,28 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
     );
   };
 
+  let itemCloned = cloneDeep(item);
+
   const response = item.response || {};
 
-  const handleCheckboxChange = (checkedLines) => {
-    // Faites quelque chose avec les lignes cochées, par exemple, les stocker dans un état
-    console.log('Lignes cochées :', checkedLines);
+  const handleCheckboxChange = (checkedLines) => {};
+
+  const handleButtonClick = () => {
+    return selectedRows;
+  };
+
+  const [currentItem, setCurrentItem] = useState(itemCloned);
+
+  const handleToggleAllCheckboxes = (isChecked) => {
+    const updatedResponse = {
+      ...currentItem.response,
+      allCheckboxesChecked: isChecked
+    };
+
+    setCurrentItem((prevItem) => ({
+      ...prevItem,
+      response: updatedResponse
+    }));
   };
 
   const getTabPanel = (tab) => {
@@ -45,7 +64,7 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
       case 'response': {
         return (
           <QueryResult
-            item={item}
+            item={currentItem}
             collection={collection}
             width={rightPaneWidth}
             data={response.data}
@@ -54,6 +73,8 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
             error={response.error}
             key={item.filename}
             onCheckboxChange={handleCheckboxChange}
+            onToggleAllCheckboxes={handleToggleAllCheckboxes}
+            onSelect={setSelectedRows}
           />
         );
       }
@@ -132,8 +153,12 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
       <div className="flex flex-wrap ">
         {!isLoading && focusedTab.responsePaneTab == 'response' ? (
           <div className="flex flex-grow ">
-            <CodeEditorCheckboxes item={item} onCheckboxChange={handleCheckboxChange} />
-            <GenerateTests item={item} />
+            <CodeEditorCheckboxes
+              item={currentItem}
+              onCheckboxChange={handleCheckboxChange}
+              onToggleAllCheckboxes={handleToggleAllCheckboxes}
+            />
+            <GenerateTests item={currentItem} onButtonClick={handleButtonClick} />
           </div>
         ) : null}
       </div>

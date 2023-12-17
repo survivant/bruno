@@ -55,7 +55,9 @@ const QueryResult = ({
   disableRunEventListener,
   headers,
   error,
-  onCheckboxChange
+  onCheckboxChange,
+  onToggleAllCheckboxes,
+  onSelect
 }) => {
   const contentType = getContentType(headers);
   const mode = getCodeMirrorModeBasedOnContentType(contentType, data);
@@ -144,6 +146,8 @@ const QueryResult = ({
             disableRunEventListener={disableRunEventListener}
             storedTheme={storedTheme}
             onCheckboxChange={onCheckboxChange}
+            onToggleAllCheckboxes={onToggleAllCheckboxes}
+            onSelect={onSelect}
           />
           {queryFilterEnabled && <QueryResultFilter onChange={debouncedResultFilterOnChange} mode={mode} />}
         </>

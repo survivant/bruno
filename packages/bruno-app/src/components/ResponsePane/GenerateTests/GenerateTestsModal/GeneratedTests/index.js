@@ -1,21 +1,11 @@
-import CodeEditor from 'components/CodeEditor/index';
-import get from 'lodash/get';
-import { HTTPSnippet } from 'httpsnippet';
-import { useTheme } from 'providers/Theme/index';
-import { buildHarRequest } from 'utils/codegenerator/har';
-import { useSelector } from 'react-redux';
-import { uuid } from 'utils/common';
-import cloneDeep from 'lodash/cloneDeep';
-import { interpolateString, interpolateVars } from '@usebruno/js/src/interpolate';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import { IconCopy } from '@tabler/icons';
 import React from 'react';
 
-const GeneratedTests = ({ item }) => {
+const GeneratedTests = ({ item, selectedLines }) => {
   let response = item.response;
-
-  const traverseJson = (obj, parentPath = '') => {
+  const traverseJson = (obj, selectedLines, parentPath = '') => {
     let result = '';
 
     Object.entries(obj).forEach(([key, value]) => {
@@ -25,13 +15,14 @@ const GeneratedTests = ({ item }) => {
       // check in the value is an array
       if (typeof value === 'object' && value !== null) {
         if (Object.entries(value).length > 0) {
-          result += traverseJson(value, currentPath);
+          result += traverseJson(value, selectedLines, currentPath);
         } else {
-          console.log('key=' + key + ' est vide');
-          result += `test("${key} should be empty", function() {
+          if (selectedLines.includes(key)) {
+            result += `test("${key} should be empty", function() {
   const data = res.getBody();
   expect(data.${key}).to.be.empty;
 });\n\n`;
+          }
         }
       } else {
         // we should put between [''] the words that contains "-"
@@ -47,10 +38,12 @@ const GeneratedTests = ({ item }) => {
 
         let currentPathFormatted = currentPathComponents.join('');
 
-        result += `test("${currentPath} should equal", function() {
+        if (selectedLines.includes(currentPath)) {
+          result += `test("${currentPath} should equal", function() {
   const data = res.getBody();
   expect(data${currentPathFormatted}).to.equal("${value}");
 });\n\n`;
+        }
       }
     });
 
@@ -61,7 +54,7 @@ const GeneratedTests = ({ item }) => {
   expect(res.getStatus()).to.equal(${response.status});
 });\n\n`;
 
-  result += traverseJson(item.response.data);
+  result += traverseJson(item.response.data, selectedLines);
 
   return (
     <>

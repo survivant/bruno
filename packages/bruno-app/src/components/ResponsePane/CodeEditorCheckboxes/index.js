@@ -1,27 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StyledWrapper from './StyledWrapper';
-import toast from 'react-hot-toast';
-import get from 'lodash/get';
-import { IconCheckbox } from '@tabler/icons';
+import { IconSquare, IconSquareCheck } from '@tabler/icons';
 
-const CodeEditorCheckboxes = ({ item, onCheckboxChange }) => {
+const CodeEditorCheckboxes = ({ item, onCheckboxChange, onToggleAllCheckboxes }) => {
   const response = item.response || {};
 
+  const [isChecked, setIsChecked] = useState(false);
+
   const handleClick = () => {
-    toast('Coming soon');
-  };
-  // Fonction pour gérer le changement d'état de la case à cocher
-  const handleCheckboxChange = () => {
-    console.log('CodeEditorCheckboxes:handleCheckboxChange');
-    if (onCheckboxChange && typeof onCheckboxChange === 'function') {
-      onCheckboxChange('all');
+    setIsChecked((prevChecked) => !prevChecked);
+    if (onToggleAllCheckboxes && typeof onToggleAllCheckboxes === 'function') {
+      const isChecked = !response.allCheckboxesChecked;
+      onToggleAllCheckboxes(isChecked);
     }
   };
 
   return (
     <StyledWrapper className="ml-4 flex items-center">
-      <button onClick={handleCheckboxChange} disabled={!response.dataBuffer} title="Select/Unselect checkboxes">
-        <IconCheckbox size={16} strokeWidth={1.5} />
+      <button onClick={handleClick} title="Select/Unselect checkboxes">
+        {isChecked ? <IconSquareCheck size={20} strokeWidth={1.5} /> : <IconSquare size={20} strokeWidth={1.5} />}
       </button>
     </StyledWrapper>
   );

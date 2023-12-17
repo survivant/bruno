@@ -20,12 +20,21 @@ const QueryResultPreview = ({
   mode,
   disableRunEventListener,
   storedTheme,
-  onCheckboxChange
+  onCheckboxChange,
+  onToggleAllCheckboxes,
+  onSelect
 }) => {
   const preferences = useSelector((state) => state.app.preferences);
   const dispatch = useDispatch();
 
   const [numPages, setNumPages] = useState(null);
+
+  const handleToggleAllCheckboxes = (isChecked) => {
+    if (onToggleAllCheckboxes && typeof onToggleAllCheckboxes === 'function') {
+      onToggleAllCheckboxes(isChecked);
+    }
+  };
+
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
@@ -78,7 +87,10 @@ const QueryResultPreview = ({
           mode={mode}
           readOnly
           checkboxEnabled={true}
+          item={item}
           onCheckboxChange={onCheckboxChange}
+          onToggleAllCheckboxes={handleToggleAllCheckboxes}
+          onSelect={onSelect}
         />
       );
     }
