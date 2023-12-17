@@ -94,6 +94,40 @@ if (!SERVER_RENDERED) {
   };
 }
 
+const getJsonArrayFromContent = (content) => {
+  const traverseJson = (obj, result, parentPath = '') => {
+    Object.entries(obj).forEach(([key, value]) => {
+      // Find the path based on the parent
+      const currentPath = parentPath ? `${parentPath}.${key}` : key;
+
+      if (typeof value === 'object' && value !== null && Object.entries(value).length > 0) {
+        // If the value is an object with nested properties, recursively traverse
+        traverseJson(value, result, currentPath);
+      } else {
+        // Split the currentPath into components
+        const currentPathComponents = currentPath.split('.');
+
+        // Iterate through components to create nested paths
+        currentPathComponents.reduce((path, component, index) => {
+          const nestedPath = index === 0 ? component : `${path}.${component}`;
+
+          // Push the nested path to the result array only if the parent is not already present
+          if (!result.includes(nestedPath)) {
+            result.push(nestedPath);
+          }
+
+          return nestedPath;
+        }, '');
+      }
+    });
+  };
+
+  let result = [];
+  traverseJson(content, result);
+
+  return result;
+};
+
 export default class CodeEditor extends React.Component {
   constructor(props) {
     super(props);
@@ -103,6 +137,9 @@ export default class CodeEditor extends React.Component {
     // unnecessary updates during the update lifecycle.
     this.cachedValue = props.value || '';
     this.variables = {};
+    this.state = {
+      checkboxUpdated: false
+    };
   }
 
   componentDidMount() {
@@ -117,7 +154,7 @@ export default class CodeEditor extends React.Component {
       matchBrackets: true,
       showCursorWhenSelecting: true,
       foldGutter: true,
-      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
+      gutters: ['CodeMirror-checkboxes', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
       lint: { esversion: 11 },
       readOnly: this.props.readOnly,
       scrollbarStyle: 'overlay',
@@ -186,6 +223,7 @@ export default class CodeEditor extends React.Component {
         }
       }
     }));
+
     CodeMirror.registerHelper('lint', 'json', function (text) {
       let found = [];
       if (!window.jsonlint) {
@@ -233,9 +271,138 @@ export default class CodeEditor extends React.Component {
         }
       });
     }
+
+    // Update gutter with CodeMirror-checkboxes after the editor has been initialized
+    if (this.props.checkboxEnabled) {
+      this.createCheckboxes();
+    }
   }
 
+  createCheckboxes = () => {
+    const lastLine = this.editor.lineCount();
+
+    // Remove existing CodeMirror-checkboxes
+    this.editor.clearGutter('CodeMirror-checkboxes');
+
+    const handleCheckboxChange = (lineNumber, isChecked, key) => {
+      const { editor } = this;
+
+      // Check if the line has children
+      const hasChildren = this.checkLineHasChildren(lineNumber);
+      if (hasChildren) {
+        // Handle the children checkboxes (enable/disable them based on the parent checkbox)
+        this.handleChildrenCheckboxes(lineNumber, isChecked);
+      }
+
+      let array = [];
+      let selectedLines = '';
+      for (let j = 0; j < lastLine; j++) {
+        let lineChecked = false;
+        const fileInfo = this.editor.lineInfo(j);
+        if (fileInfo && fileInfo.gutterMarkers && fileInfo.gutterMarkers['CodeMirror-checkboxes']) {
+          const lineCheckbox = fileInfo.gutterMarkers['CodeMirror-checkboxes'];
+          if (lineCheckbox.checked) {
+            selectedLines += fileInfo.text;
+            lineChecked = true;
+
+            array.push(lineCheckbox.getAttribute('data-line-key'));
+          }
+        }
+      }
+      this.setState({ checkboxUpdated: true }, () => {
+        this.props.onSelect(array);
+      });
+    };
+
+    const setCheckboxForLine = (lineNumber, key) => {
+      const fileInfo = this.editor.lineInfo(lineNumber);
+      if (fileInfo && fileInfo.text.trim() !== '') {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+
+        if (this.props.item.response && this.props.item.response.allCheckboxesChecked) {
+          checkbox.checked = true;
+        }
+
+        checkbox.setAttribute('data-line-number', lineNumber);
+        checkbox.setAttribute('data-line-key', key);
+
+        checkbox.addEventListener('change', () => {
+          const isChecked = checkbox.checked;
+          const lineNumber = parseInt(checkbox.getAttribute('data-line-number'), 10);
+          const key = checkbox.getAttribute('data-line-key');
+
+          // Handle checkbox change
+          handleCheckboxChange(lineNumber, isChecked, key);
+        });
+
+        this.editor.setGutterMarker(lineNumber, 'CodeMirror-checkboxes', checkbox);
+      }
+    };
+
+    let parentKey = ''; // Initialize parent key
+    let parentIndentation = 0;
+    let levelStack = [];
+
+    for (let i = 0; i <= lastLine; i++) {
+      const fileInfo = this.editor.lineInfo(i);
+
+      if (fileInfo && fileInfo.text) {
+        const lineText = fileInfo.text;
+
+        // Exclude lines with only "{" or "}" or "}," or "},{"
+        if (/^\s*[\{\}\],\{]+$/.test(lineText)) {
+          continue; // Skip this line
+        }
+
+        const indentation = lineText.match(/^\s*/)[0].length;
+
+        if (indentation > parentIndentation) {
+          // Going deeper, update the parent key
+          levelStack.push({ key: parentKey, indentation: parentIndentation });
+          if (parentKey !== '') {
+            parentKey += '.';
+          }
+          parentKey += lineText.match(/^\s*"([^"]+)":/)[1];
+        } else if (indentation < parentIndentation) {
+          // Going back up, update the parent key
+          while (levelStack.length > 0 && indentation <= levelStack[levelStack.length - 1].indentation) {
+            levelStack.pop();
+          }
+
+          if (levelStack.length > 1) {
+            parentKey = levelStack[levelStack.length - 1].key + lineText.match(/^\s*"([^"]+)":/)[1];
+          } else {
+            parentKey = lineText.match(/^\s*"([^"]+)":/)[1];
+          }
+        } else {
+          // We are at the same level
+          if (levelStack.length > 1) {
+            parentKey = levelStack[levelStack.length - 1].key + '.' + lineText.match(/^\s*"([^"]+)":/)[1];
+          } else {
+            parentKey = lineText.match(/^\s*"([^"]+)":/)[1];
+          }
+        }
+
+        // Set the checkbox for this line
+        setCheckboxForLine(i, parentKey);
+
+        parentIndentation = indentation;
+      }
+    }
+  };
   componentDidUpdate(prevProps) {
+    if (this.props.checkboxEnabled) {
+      if (!this.state.checkboxUpdated) {
+        if (this.props.item.response.allCheckboxesChecked !== prevProps.item.response.allCheckboxesChecked) {
+          this.createCheckboxes();
+        }
+      } else {
+        this.setState({ checkboxUpdated: false });
+      }
+    } else {
+      this.editor.clearGutter('CodeMirror-checkboxes');
+    }
     // Ensure the changes caused by this update are not interpreted as
     // user-input changes which could otherwise result in an infinite
     // event loop.
@@ -250,6 +417,7 @@ export default class CodeEditor extends React.Component {
     if (this.props.value !== prevProps.value && this.props.value !== this.cachedValue && this.editor) {
       this.cachedValue = this.props.value;
       this.editor.setValue(this.props.value);
+      this.jsonArray = getJsonArrayFromContent(JSON.parse(this.props.value));
     }
 
     if (this.editor) {
@@ -306,4 +474,48 @@ export default class CodeEditor extends React.Component {
       }
     }
   };
+
+  checkLineHasChildren(lineNumber) {
+    const { editor } = this;
+    const fileInfo = editor.lineInfo(lineNumber);
+    const currentIndentation = fileInfo.text.match(/^\s*/)[0].length;
+
+    for (let i = lineNumber + 1; i <= editor.lineCount(); i++) {
+      const nextLineInfo = editor.lineInfo(i);
+      if (nextLineInfo) {
+        const nextIndentation = nextLineInfo.text.match(/^\s*/)[0].length;
+        if (nextIndentation > currentIndentation) {
+          // The next line is indented, indicating it's a child of the current line
+          return true;
+        } else if (nextIndentation <= currentIndentation) {
+          // We've reached a line with the same or lesser indentation, meaning no more children
+          break;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  handleChildrenCheckboxes(lineNumber, isChecked) {
+    const { editor } = this;
+    const currentIndentation = editor.lineInfo(lineNumber).text.match(/^\s*/)[0].length;
+
+    for (let i = lineNumber + 1; i <= editor.lineCount(); i++) {
+      const nextLineInfo = editor.lineInfo(i);
+      if (nextLineInfo) {
+        const nextIndentation = nextLineInfo.text.match(/^\s*/)[0].length;
+        if (nextIndentation > currentIndentation) {
+          // The next line is a child, handle its checkbox
+          const lineCheckbox = nextLineInfo.gutterMarkers && nextLineInfo.gutterMarkers['CodeMirror-checkboxes'];
+          if (lineCheckbox) {
+            lineCheckbox.checked = isChecked;
+          }
+        } else {
+          // We've reached a line with the same or lesser indentation, meaning no more children
+          break;
+        }
+      }
+    }
+  }
 }

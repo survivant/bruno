@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { IconCopy } from '@tabler/icons';
 import React from 'react';
 
-const CodeView = ({ language, item }) => {
+const CodeView = ({ language, item, envVars, collectionVariables }) => {
   const { storedTheme } = useTheme();
   const preferences = useSelector((state) => state.app.preferences);
   const { target, client, language: lang } = language;
@@ -68,7 +68,7 @@ const CodeView = ({ language, item }) => {
           text={snippet}
           onCopy={() => toast.success('Copied to clipboard!')}
         >
-          <IconCopy size={25} strokeWidth={1.5} />
+          <IconCopy size={20} strokeWidth={1.5} />
         </CopyToClipboard>
         <CodeEditor
           readOnly

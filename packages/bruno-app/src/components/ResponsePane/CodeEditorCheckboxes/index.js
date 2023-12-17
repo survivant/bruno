@@ -1,20 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StyledWrapper from './StyledWrapper';
-import toast from 'react-hot-toast';
-import get from 'lodash/get';
-import { IconCheckbox } from '@tabler/icons';
+import { IconSquare, IconSquareCheck } from '@tabler/icons';
 
-const CodeEditorCheckboxes = ({ item }) => {
+const CodeEditorCheckboxes = ({ item, onCheckboxChange, onToggleAllCheckboxes }) => {
   const response = item.response || {};
 
-  const saveResponseToFile = () => {
-    toast('Coming soon');
+  const [isChecked, setIsChecked] = useState(false);
+
+  const handleClick = () => {
+    setIsChecked((prevChecked) => !prevChecked);
+    if (onToggleAllCheckboxes && typeof onToggleAllCheckboxes === 'function') {
+      const isChecked = !response.allCheckboxesChecked;
+      onToggleAllCheckboxes(isChecked);
+    }
   };
 
   return (
     <StyledWrapper className="ml-4 flex items-center">
-      <button onClick={saveResponseToFile} disabled={!response.dataBuffer} title="Select/Unselect checkboxes">
-        <IconCheckbox size={16} strokeWidth={1.5} />
+      <button onClick={handleClick} title="Select/Unselect checkboxes">
+        {isChecked ? <IconSquareCheck size={20} strokeWidth={1.5} /> : <IconSquare size={20} strokeWidth={1.5} />}
       </button>
     </StyledWrapper>
   );

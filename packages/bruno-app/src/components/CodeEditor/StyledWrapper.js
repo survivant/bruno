@@ -8,6 +8,12 @@ const StyledWrapper = styled.div`
     line-break: anywhere;
   }
 
+  .CodeMirror-checkboxes {
+    padding: 1px 8px 0 5px;
+    color: #c8d2d7;
+    font-size: 10px;
+  }
+
   .CodeMirror-overlayscroll-horizontal div,
   .CodeMirror-overlayscroll-vertical div {
     background: #d2d7db;
