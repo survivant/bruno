@@ -14,15 +14,12 @@ Sébastien
 You can reach me at:
 
 - **X/Twitter**&nbsp;&nbsp;<img src="https://github.githubassets.com/assets/x-023c3ca5e173.svg" width="25" height="25"> [@survivant](https://twitter.com/survivant)
-- **GitHub**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://github.githubassets.com/assets/github-mark-9be88460eaa6.svg" width="25" height="25" > [survivant](https://github.com/survivant) 
+- **GitHub**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://github.githubassets.com/assets/github-mark-9be88460eaa6.svg" width="25" height="25" > [survivant](https://github.com/survivant)
 - **Bluesky**&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://blueskyweb.xyz/images/logo-64x64.jpg" width="25" height="25" > [@survivant.bsky.social](https://bluesky.social/survivant)
-
-
-
-
 
 Here are the Issues that are included
 
+- [Bruno Pull Request #1129 - [feature] Add checkbox on each line in CodeEditor](https://github.com/usebruno/bruno/pull/1129)
 - [Bruno Pull Request #1128 - [feature] Generate tests from response](https://github.com/usebruno/bruno/pull/1128)
 - [Bruno Pull Request #1200 - [feature] Add copy to clipboard button in Generate Code](https://github.com/usebruno/bruno/pull/1200)
 - [Bruno Pull Request #1194 - [BUG] Add validation for Auth mode basic](https://github.com/usebruno/bruno/pull/1194)
