@@ -19,6 +19,7 @@ You can reach me at:
 
 Here are the Issues that are included
 
+- [Bruno Issue #1277 - [feature] Better error message when received a 404 and evaluate Post Response variables](https://github.com/usebruno/bruno/issues/1277)
 - [Bruno Pull Request #1129 - [feature] Add checkbox on each line in CodeEditor](https://github.com/usebruno/bruno/pull/1129)
 - [Bruno Pull Request #1128 - [feature] Generate tests from response](https://github.com/usebruno/bruno/pull/1128)
 - [Bruno Pull Request #1200 - [feature] Add copy to clipboard button in Generate Code](https://github.com/usebruno/bruno/pull/1200)

@@ -57,8 +57,28 @@ class VarsRuntime {
     };
 
     _.each(enabledVars, (v) => {
-      const value = evaluateJsExpression(v.value, context);
-      bru.setVar(v.name, value);
+      try {
+        const value = evaluateJsExpression(v.value, context);
+        bru.setVar(v.name, value);
+      } catch (error) {
+        // Handle the error or generate a custom exception with a personalized message
+        let errorMessage = 'Error evaluating Post Response variables: \n';
+
+        // Include HTTP response code if available
+        if (res && res.status) {
+          errorMessage += `HTTP Status Code: ${res.status}. \n`;
+        }
+
+        // Include information about an empty response body
+        if (res && res.data === undefined) {
+          errorMessage += 'The response body is empty. \n';
+        }
+
+        // Include the variable v.value
+        errorMessage += `It was impossible to evaluate the variable: [${v.value}] `;
+
+        throw new Error(errorMessage);
+      }
     });
 
     return {
