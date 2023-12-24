@@ -4,48 +4,50 @@ import { IconCopy } from '@tabler/icons';
 import React from 'react';
 
 const GeneratedTests = ({ item, selectedLines }) => {
-  let response = item.response;
+  // Check if item.response is defined; if not, set response to an empty object
+  let response = item.response || {};
   const traverseJson = (obj, selectedLines, parentPath = '') => {
     let result = '';
+    if (obj && typeof obj === 'object') {
+      Object.entries(obj).forEach(([key, value]) => {
+        // Find the path based on the parent
+        const currentPath = parentPath ? `${parentPath}.${key}` : key;
 
-    Object.entries(obj).forEach(([key, value]) => {
-      // Find the path based on the parent
-      const currentPath = parentPath ? `${parentPath}.${key}` : key;
-
-      // check in the value is an array
-      if (typeof value === 'object' && value !== null) {
-        if (Object.entries(value).length > 0) {
-          result += traverseJson(value, selectedLines, currentPath);
-        } else {
-          if (selectedLines.includes(key)) {
-            result += `test("${key} should be empty", function() {
-  const data = res.getBody();
-  expect(data.${key}).to.be.empty;
-});\n\n`;
-          }
-        }
-      } else {
-        // we should put between [''] the words that contains "-"
-        let currentPathComponents = currentPath.split('.');
-
-        currentPathComponents = currentPathComponents.map((component) => {
-          if (component.includes('-')) {
-            return `['${component}']`;
+        // check in the value is an array
+        if (typeof value === 'object' && value !== null) {
+          if (Object.entries(value).length > 0) {
+            result += traverseJson(value, selectedLines, currentPath);
           } else {
-            return `.${component}`;
+            if (selectedLines.includes(key)) {
+              result += `test("${key} should be empty", function() {
+    const data = res.getBody();
+    expect(data.${key}).to.be.empty;
+  });\n\n`;
+            }
           }
-        });
+        } else {
+          // we should put between [''] the words that contains "-"
+          let currentPathComponents = currentPath.split('.');
 
-        let currentPathFormatted = currentPathComponents.join('');
+          currentPathComponents = currentPathComponents.map((component) => {
+            if (component.includes('-')) {
+              return `['${component}']`;
+            } else {
+              return `.${component}`;
+            }
+          });
 
-        if (selectedLines.includes(currentPath)) {
-          result += `test("${currentPath} should equal", function() {
-  const data = res.getBody();
-  expect(data${currentPathFormatted}).to.equal("${value}");
-});\n\n`;
+          let currentPathFormatted = currentPathComponents.join('');
+
+          if (selectedLines.includes(currentPath)) {
+            result += `test("${currentPath} should equal", function() {
+    const data = res.getBody();
+    expect(data${currentPathFormatted}).to.equal("${value}");
+  });\n\n`;
+          }
         }
-      }
-    });
+      });
+    }
 
     return result;
   };
@@ -54,7 +56,7 @@ const GeneratedTests = ({ item, selectedLines }) => {
   expect(res.getStatus()).to.equal(${response.status});
 });\n\n`;
 
-  result += traverseJson(item.response.data, selectedLines);
+  result += traverseJson(response.data, selectedLines);
 
   return (
     <>

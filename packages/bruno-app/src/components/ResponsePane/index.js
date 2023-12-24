@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import find from 'lodash/find';
 import classnames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
@@ -59,6 +59,11 @@ const ResponsePane = ({ rightPaneWidth, item, collection }) => {
       response: updatedResponse
     }));
   };
+
+  // Update currentItem when the item prop changes
+  useEffect(() => {
+    setCurrentItem(item);
+  }, [item]);
 
   const getTabPanel = (tab) => {
     switch (tab) {

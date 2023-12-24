@@ -278,7 +278,7 @@ export default class CodeEditor extends React.Component {
     }
   }
 
-  createCheckboxes = () => {
+  createCheckboxes = (withUpdate) => {
     const lastLine = this.editor.lineCount();
 
     // Remove existing CodeMirror-checkboxes
@@ -294,24 +294,7 @@ export default class CodeEditor extends React.Component {
         this.handleChildrenCheckboxes(lineNumber, isChecked);
       }
 
-      let array = [];
-      let selectedLines = '';
-      for (let j = 0; j < lastLine; j++) {
-        let lineChecked = false;
-        const fileInfo = this.editor.lineInfo(j);
-        if (fileInfo && fileInfo.gutterMarkers && fileInfo.gutterMarkers['CodeMirror-checkboxes']) {
-          const lineCheckbox = fileInfo.gutterMarkers['CodeMirror-checkboxes'];
-          if (lineCheckbox.checked) {
-            selectedLines += fileInfo.text;
-            lineChecked = true;
-
-            array.push(lineCheckbox.getAttribute('data-line-key'));
-          }
-        }
-      }
-      this.setState({ checkboxUpdated: true }, () => {
-        this.props.onSelect(array);
-      });
+      this.findSelectedLines(lastLine);
     };
 
     const setCheckboxForLine = (lineNumber, key) => {
@@ -390,15 +373,41 @@ export default class CodeEditor extends React.Component {
         parentIndentation = indentation;
       }
     }
+    if (withUpdate) {
+      this.findSelectedLines(lastLine);
+    }
   };
+
+  findSelectedLines(lastLine) {
+    let array = [];
+    let selectedLines = '';
+    for (let j = 0; j < lastLine; j++) {
+      let lineChecked = false;
+      const fileInfo = this.editor.lineInfo(j);
+      if (fileInfo && fileInfo.gutterMarkers && fileInfo.gutterMarkers['CodeMirror-checkboxes']) {
+        const lineCheckbox = fileInfo.gutterMarkers['CodeMirror-checkboxes'];
+        if (lineCheckbox.checked) {
+          selectedLines += fileInfo.text;
+          lineChecked = true;
+
+          array.push(lineCheckbox.getAttribute('data-line-key'));
+        }
+      }
+    }
+    this.setState({ checkboxUpdated: true }, () => {
+      this.props.onSelect(array);
+    });
+  }
+
   componentDidUpdate(prevProps) {
     if (this.props.checkboxEnabled) {
       if (!this.state.checkboxUpdated) {
         if (
-          this.props.item.response &&
-          this.props.item.response.allCheckboxesChecked !== prevProps.item.response.allCheckboxesChecked
+          prevProps.item.response == undefined ||
+          (this.props.item.response &&
+            this.props.item.response.allCheckboxesChecked !== prevProps.item.response.allCheckboxesChecked)
         ) {
-          this.createCheckboxes();
+          this.createCheckboxes(prevProps.item.response != undefined);
         }
       } else {
         this.setState({ checkboxUpdated: false });
