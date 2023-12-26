@@ -1,11 +1,11 @@
 {
-  "version": "v1.5.1",
-  "name": "bruno",
-  "description": "Opensource API Client for Exploring and Testing APIs",
-  "homepage": "https://www.usebruno.com",
+  "version": "v1.5.1-sd",
+  "name": "bruno-sd",
+  "description": "FORK of Bruno to include my changes",
+  "homepage": "https://github.com/survivant/bruno/tree/BrunoSD",
   "private": true,
   "main": "src/index.js",
-  "author": "Anoop M D <anoop.md1421@gmail.com> (https://helloanoop.com/)",
+  "author": "Survivant00@gmail.com / Bruno creator : Anoop M D <anoop.md1421@gmail.com> (https://helloanoop.com/)",
   "scripts": {
     "clean": "rimraf dist",
     "dev": "electron .",
