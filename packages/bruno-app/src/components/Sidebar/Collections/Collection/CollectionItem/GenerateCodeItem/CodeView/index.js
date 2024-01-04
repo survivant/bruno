@@ -12,12 +12,19 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import { IconCopy } from '@tabler/icons';
 import React from 'react';
+import { findCollectionByItemUid } from '../../../../../../../utils/collections/index';
 
 const CodeView = ({ language, item, envVars, collectionVariables }) => {
   const { storedTheme } = useTheme();
   const preferences = useSelector((state) => state.app.preferences);
   const { target, client, language: lang } = language;
-  let headers = item.draft ? get(item, 'draft.request.headers') : get(item, 'request.headers');
+  const requestHeaders = item.draft ? get(item, 'draft.request.headers') : get(item, 'request.headers');
+  const collection = findCollectionByItemUid(
+    useSelector((state) => state.collections.collections),
+    item.uid
+  );
+
+  let headers = [...collection?.root?.request?.headers, ...requestHeaders];
 
   envVars = cloneDeep(envVars);
   collectionVariables = cloneDeep(collectionVariables);
@@ -61,14 +68,14 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
   }
 
   return (
-    <div>
+    <>
       <StyledWrapper>
         <CopyToClipboard
           className="copy-to-clipboard"
           text={snippet}
           onCopy={() => toast.success('Copied to clipboard!')}
         >
-          <IconCopy size={20} strokeWidth={1.5} />
+          <IconCopy size={25} strokeWidth={1.5} />
         </CopyToClipboard>
         <CodeEditor
           readOnly
@@ -78,7 +85,7 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
           mode={lang}
         />
       </StyledWrapper>
-    </div>
+    </>
   );
 };
 
