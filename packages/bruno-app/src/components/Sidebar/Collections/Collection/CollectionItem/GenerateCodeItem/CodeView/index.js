@@ -24,7 +24,7 @@ const CodeView = ({ language, item, envVars, collectionVariables }) => {
     item.uid
   );
 
-  let headers = [...collection?.root?.request?.headers, ...requestHeaders];
+  let headers = [...(collection?.root?.request?.headers || []), ...(requestHeaders || [])];
 
   envVars = cloneDeep(envVars);
   collectionVariables = cloneDeep(collectionVariables);

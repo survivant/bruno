@@ -137,6 +137,12 @@ export default class CodeEditor extends React.Component {
     // unnecessary updates during the update lifecycle.
     this.cachedValue = props.value || '';
     this.variables = {};
+
+    this.lintOptions = {
+      esversion: 11,
+      expr: true,
+      asi: true
+    };
     this.state = {
       checkboxUpdated: false
     };
@@ -154,8 +160,8 @@ export default class CodeEditor extends React.Component {
       matchBrackets: true,
       showCursorWhenSelecting: true,
       foldGutter: true,
-      gutters: ['CodeMirror-checkboxes', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-      lint: { esversion: 11 },
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
+      lint: this.lintOptions,
       readOnly: this.props.readOnly,
       scrollbarStyle: 'overlay',
       theme: this.props.theme === 'dark' ? 'monokai' : 'default',
@@ -223,7 +229,6 @@ export default class CodeEditor extends React.Component {
         }
       }
     }));
-
     CodeMirror.registerHelper('lint', 'json', function (text) {
       let found = [];
       if (!window.jsonlint) {
@@ -479,7 +484,7 @@ export default class CodeEditor extends React.Component {
 
   _onEdit = () => {
     if (!this.ignoreChangeEvent && this.editor) {
-      this.editor.setOption('lint', this.editor.getValue().trim().length > 0 ? { esversion: 11 } : false);
+      this.editor.setOption('lint', this.editor.getValue().trim().length > 0 ? this.lintOptions : false);
       this.cachedValue = this.editor.getValue();
       if (this.props.onEdit) {
         this.props.onEdit(this.cachedValue);
