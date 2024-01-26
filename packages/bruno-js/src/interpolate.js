@@ -28,83 +28,14 @@ const interpolateEnvVars = (str, processEnvVars) => {
   });
 };
 
-const interpolateCollectionVars = (str, processEnvVars, processCollectionVariables) => {
-  if (!str || !str.length || typeof str !== 'string') {
-    return str;
-  }
-
-  const template = Handlebars.compile(str, { noEscape: true });
-
-  const output = template({
-    ...processEnvVars,
-    ...processCollectionVariables,
-    process: {
-      env: {
-        ...processCollectionVariables
-      }
-    }
-  });
-
-  // Check if returned string has any more variables to interpolate
-  if (output.includes('{{') && output.includes('}}')) {
-    return interpolateCollectionVars(output, processEnvVars, processCollectionVariables);
-  }
-
-  return output;
-};
-
-const interpolateString = (str, envVariables = {}, collectionVariables = {}, processEnvVars = {}) => {
-  if (!str || !str.length || typeof str !== 'string') {
-    return str;
-  }
-
-  // envVariables can, in turn, have values as {{process.env.VAR_NAME}}
-  // Therefore, we need to interpolate envVariables first with processEnvVars
-  forOwn(envVariables, (value, key) => {
-    envVariables[key] = interpolateEnvVars(value, processEnvVars);
-  });
-
-  const template = Handlebars.compile(str, { noEscape: true });
-
-  // collectionVariables take precedence over envVariables
-  const combinedVars = {
-    ...envVariables,
-    ...collectionVariables,
-    process: {
-      env: {
-        ...processEnvVars
-      }
-    }
-  };
-
-  return template(combinedVars);
-};
-
-const interpolateUrl = ({ url, envVars, collectionVariables, processEnvVars }) => {
-  if (!url || !url.length || typeof url !== 'string') {
-    return;
-  }
-
-  const template = Handlebars.compile(url, { noEscape: true });
-
-  return template({
-    ...envVars,
-    ...collectionVariables,
-    process: {
-      env: {
-        ...processEnvVars
-      }
-    }
-  });
-};
+const varsRegex = /(?<!\\)\{\{(?!process\.env\.\w+)(.*\..*)\}\}/g;
 
 const interpolateVars = (request, envVars = {}, collectionVariables = {}, processEnvVars = {}) => {
   // we clone envVars because we don't want to modify the original object
   envVars = cloneDeep(envVars);
-  collectionVariables = cloneDeep(collectionVariables);
 
-  // envVariables can, in turn, have values as {{process.env.VAR_NAME}}
-  // Therefore, we need to interpolate envVariables first with processEnvVars
+  // envVars can inturn have values as {{process.env.VAR_NAME}}
+  // so we need to interpolate envVars first with processEnvVars
   forOwn(envVars, (value, key) => {
     envVars[key] = interpolateEnvVars(value, processEnvVars);
   });
@@ -135,9 +66,11 @@ const interpolateVars = (request, envVars = {}, collectionVariables = {}, proces
       return str;
     }
 
-    // Handlebars doesn't allow dots as identifiers, so we need to use literal segments
-    const strLiteralSegment = str.replace('{{', '{{[').replace('}}', ']}}');
-    const template = Handlebars.compile(strLiteralSegment, { noEscape: true });
+    if (varsRegex.test(str)) {
+      // Handlebars doesn't allow dots as identifiers, so we need to use literal segments
+      str = str.replaceAll(varsRegex, '{{[$1]}}');
+    }
+    const template = Handlebars.compile(str, { noEscape: true });
 
     // collectionVariables take precedence over envVars
     const combinedVars = {
