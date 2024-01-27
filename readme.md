@@ -1,3 +1,6 @@
+Go to that branch to get those features bellow
+https://github.com/survivant/bruno/tree/BrunoSD
+
 This branch is not a replacement of Bruno nor a fork. It's sync with Bruno main branch, but with feature/bugs fixes
 that are not yet merged in the main branch.
 
